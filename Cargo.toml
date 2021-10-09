@@ -1,11 +1,11 @@
 [package]
-name = "confy"
+name = "conpot"
 version = "0.4.0"
-authors = ["Katharina Fey <kookie@spacekookie.de>"]
+authors = ["Franklin Delehelle <franklin.delehelle@odena.eu>"]
 description = "Boilerplate-free configuration management"
 license = "MIT/X11 OR Apache-2.0"
-documentation = "https://docs.rs/confy"
-repository = "https://github.com/rust-clique/confy"
+documentation = "https://docs.rs/conpot"
+repository = "https://github.com/delehef/conpot"
 edition = "2018"
 
 [dependencies]

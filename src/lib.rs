@@ -11,11 +11,11 @@
 //! the developer of an application, to figure out
 //! where to place the configuration files.
 //!
-//! This is where `confy` comes in.
+//! This is where `conpot` comes in.
 //!
 //! ## Idea
 //!
-//! `confy` takes care of figuring out operating system
+//! `conpot` takes care of figuring out operating system
 //! specific and environment paths before reading and
 //! writing a configuration.
 //!
@@ -26,7 +26,7 @@
 //!
 //! [serde]: https://docs.rs/serde
 //!
-//! `confy` uses the [`Default`] trait in Rust to automatically
+//! `conpot` uses the [`Default`] trait in Rust to automatically
 //! create a new configuration, if none is available to read
 //! from yet.
 //! This means that you can simply assume your application
@@ -50,8 +50,8 @@
 //!     fn default() -> Self { Self { version: 0, api_key: "".into() } }
 //! }
 //!
-//! fn main() -> Result<(), confy::ConfyError> {
-//!     let cfg = confy::load("my-app-name", None)?;
+//! fn main() -> Result<(), conpot::ConpotError> {
+//!     let cfg = conpot::load("my-app-name", None)?;
 //!     Ok(())
 //! }
 //! ```
@@ -75,16 +75,16 @@ use std::path::{Path, PathBuf};
 #[cfg(not(any(feature = "toml_conf", feature = "yaml_conf")))]
 compile_error!(
     "Exactly one config language feature must be enabled to use \
-confy.  Please enable one of either the `toml_conf` or `yaml_conf` \
+conpot.  Please enable one of either the `toml_conf` or `yaml_conf` \
 features."
 );
 
 #[cfg(all(feature = "toml_conf", feature = "yaml_conf"))]
 compile_error!(
     "Exactly one config language feature must be enabled to compile \
-confy.  Please disable one of either the `toml_conf` or `yaml_conf` features. \
+conpot.  Please disable one of either the `toml_conf` or `yaml_conf` features. \
 NOTE: `toml_conf` is a default feature, so disabling it might mean switching off \
-default features for confy in your Cargo.toml"
+default features for conpot in your Cargo.toml"
 );
 
 #[cfg(feature = "toml_conf")]
@@ -93,9 +93,9 @@ const EXTENSION: &str = "toml";
 #[cfg(feature = "yaml_conf")]
 const EXTENSION: &str = "yml";
 
-/// The errors the confy crate can encounter.
+/// The errors the conpot crate can encounter.
 #[derive(Debug)]
-pub enum ConfyError {
+pub enum ConpotError {
     #[cfg(feature = "toml_conf")]
     BadTomlData(toml::de::Error),
 
@@ -117,44 +117,44 @@ pub enum ConfyError {
     OpenConfigurationFileError(std::io::Error),
 }
 
-impl fmt::Display for ConfyError {
+impl fmt::Display for ConpotError {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         match self {
             #[cfg(feature = "toml_conf")]
-            ConfyError::BadTomlData(e) => write!(f, "Bad TOML data: {}", e),
+            ConpotError::BadTomlData(e) => write!(f, "Bad TOML data: {}", e),
             #[cfg(feature = "toml_conf")]
-            ConfyError::SerializeTomlError(_) => {
+            ConpotError::SerializeTomlError(_) => {
                 write!(f, "Failed to serialize configuration data into TOML.")
             }
 
             #[cfg(feature = "yaml_conf")]
-            ConfyError::BadYamlData(e) => write!(f, "Bad YAML data: {}", e),
+            ConpotError::BadYamlData(e) => write!(f, "Bad YAML data: {}", e),
             #[cfg(feature = "yaml_conf")]
-            ConfyError::SerializeYamlError(_) => {
+            ConpotError::SerializeYamlError(_) => {
                 write!(f, "Failed to serialize configuration data into YAML.")
             }
 
-            ConfyError::DirectoryCreationFailed(e) => {
+            ConpotError::DirectoryCreationFailed(e) => {
                 write!(f, "Failed to create directory: {}", e)
             }
-            ConfyError::GeneralLoadError(_) => write!(f, "Failed to load configuration file."),
-            ConfyError::BadConfigDirectoryStr => {
+            ConpotError::GeneralLoadError(_) => write!(f, "Failed to load configuration file."),
+            ConpotError::BadConfigDirectoryStr => {
                 write!(f, "Failed to convert directory name to str.")
             }
-            ConfyError::WriteConfigurationFileError(_) => {
+            ConpotError::WriteConfigurationFileError(_) => {
                 write!(f, "Failed to write configuration file.")
             }
-            ConfyError::ReadConfigurationFileError(_) => {
+            ConpotError::ReadConfigurationFileError(_) => {
                 write!(f, "Failed to read configuration file.")
             }
-            ConfyError::OpenConfigurationFileError(_) => {
+            ConpotError::OpenConfigurationFileError(_) => {
                 write!(f, "Failed to open configuration file.")
             }
         }
     }
 }
 
-impl Error for ConfyError {}
+impl Error for ConpotError {}
 
 /// Load an application configuration from disk
 ///
@@ -163,7 +163,7 @@ impl Error for ConfyError {}
 ///
 /// Errors that are returned from this function are I/O related,
 /// for example if the writing of the new configuration fails
-/// or `confy` encounters an operating system or environment
+/// or `conpot` encounters an operating system or environment
 /// that it does not support.
 ///
 /// **Note:** The type of configuration needs to be declared in some way
@@ -171,20 +171,20 @@ impl Error for ConfyError {}
 /// configuration needs to implement `Default`.
 ///
 /// ```rust,no_run
-/// # use confy::ConfyError;
+/// # use conpot::ConpotError;
 /// # use serde_derive::{Serialize, Deserialize};
-/// # fn main() -> Result<(), ConfyError> {
+/// # fn main() -> Result<(), ConpotError> {
 /// #[derive(Default, Serialize, Deserialize)]
 /// struct MyConfig {}
 ///
-/// let cfg: MyConfig = confy::load("my-app-name", None)?;
+/// let cfg: MyConfig = conpot::load("my-app-name", None)?;
 /// # Ok(())
 /// # }
 /// ```
 pub fn load<'a, T: Serialize + DeserializeOwned + Default>(
     app_name: &str,
     config_name: impl Into<Option<&'a str>>,
-) -> Result<T, ConfyError> {
+) -> Result<T, ConpotError> {
     let path = get_configuration_file_path(app_name, config_name)?;
 
     load_path(path)
@@ -202,33 +202,33 @@ pub fn load<'a, T: Serialize + DeserializeOwned + Default>(
 /// [`load`]: fn.load.html
 pub fn load_path<T: Serialize + DeserializeOwned + Default>(
     path: impl AsRef<Path>,
-) -> Result<T, ConfyError> {
+) -> Result<T, ConpotError> {
     match File::open(&path) {
         Ok(mut cfg) => {
             let cfg_string = cfg
                 .get_string()
-                .map_err(ConfyError::ReadConfigurationFileError)?;
+                .map_err(ConpotError::ReadConfigurationFileError)?;
 
             #[cfg(feature = "toml_conf")]
             {
                 let cfg_data = toml::from_str(&cfg_string);
-                cfg_data.map_err(ConfyError::BadTomlData)
+                cfg_data.map_err(ConpotError::BadTomlData)
             }
             #[cfg(feature = "yaml_conf")]
             {
                 let cfg_data = serde_yaml::from_str(&cfg_string);
-                cfg_data.map_err(ConfyError::BadYamlData)
+                cfg_data.map_err(ConpotError::BadYamlData)
             }
         }
         Err(ref e) if e.kind() == NotFound => {
             if let Some(parent) = path.as_ref().parent() {
-                fs::create_dir_all(parent).map_err(ConfyError::DirectoryCreationFailed)?;
+                fs::create_dir_all(parent).map_err(ConpotError::DirectoryCreationFailed)?;
             }
             let cfg = T::default();
             store_path(path, &cfg)?;
             Ok(cfg)
         }
-        Err(e) => Err(ConfyError::GeneralLoadError(e)),
+        Err(e) => Err(ConpotError::GeneralLoadError(e)),
     }
 }
 
@@ -245,28 +245,28 @@ pub fn load_path<T: Serialize + DeserializeOwned + Default>(
 ///
 /// ```rust,no_run
 /// # use serde_derive::{Serialize, Deserialize};
-/// # use confy::ConfyError;
-/// # fn main() -> Result<(), ConfyError> {
+/// # use conpot::ConpotError;
+/// # fn main() -> Result<(), ConpotError> {
 /// #[derive(Serialize, Deserialize)]
 /// struct MyConf {}
 ///
 /// let my_cfg = MyConf {};
-/// confy::store("my-app-name", None, my_cfg)?;
+/// conpot::store("my-app-name", None, my_cfg)?;
 /// # Ok(())
 /// # }
 /// ```
 ///
 /// Errors returned are I/O errors related to not being
-/// able to write the configuration file or if `confy`
+/// able to write the configuration file or if `conpot`
 /// encounters an operating system or environment it does
 /// not support.
 pub fn store<'a, T: Serialize>(
     app_name: &str,
     config_name: impl Into<Option<&'a str>>,
     cfg: T,
-) -> Result<(), ConfyError> {
+) -> Result<(), ConpotError> {
     let path = get_configuration_file_path(app_name, config_name)?;
-    fs::create_dir_all(&path.parent().unwrap()).map_err(ConfyError::DirectoryCreationFailed)?;
+    fs::create_dir_all(&path.parent().unwrap()).map_err(ConpotError::DirectoryCreationFailed)?;
 
     store_path(path, cfg)
 }
@@ -278,15 +278,15 @@ pub fn store<'a, T: Serialize>(
 /// and behavior, see [`store`]'s documentation.
 ///
 /// [`store`]: fn.store.html
-pub fn store_path<T: Serialize>(path: impl AsRef<Path>, cfg: T) -> Result<(), ConfyError> {
+pub fn store_path<T: Serialize>(path: impl AsRef<Path>, cfg: T) -> Result<(), ConpotError> {
     let s;
     #[cfg(feature = "toml_conf")]
     {
-        s = toml::to_string_pretty(&cfg).map_err(ConfyError::SerializeTomlError)?;
+        s = toml::to_string_pretty(&cfg).map_err(ConpotError::SerializeTomlError)?;
     }
     #[cfg(feature = "yaml_conf")]
     {
-        s = serde_yaml::to_string(&cfg).map_err(ConfyError::SerializeYamlError)?;
+        s = serde_yaml::to_string(&cfg).map_err(ConpotError::SerializeYamlError)?;
     }
 
     let mut f = OpenOptions::new()
@@ -294,10 +294,10 @@ pub fn store_path<T: Serialize>(path: impl AsRef<Path>, cfg: T) -> Result<(), Co
         .create(true)
         .truncate(true)
         .open(path)
-        .map_err(ConfyError::OpenConfigurationFileError)?;
+        .map_err(ConpotError::OpenConfigurationFileError)?;
 
     f.write_all(s.as_bytes())
-        .map_err(ConfyError::WriteConfigurationFileError)?;
+        .map_err(ConpotError::WriteConfigurationFileError)?;
     Ok(())
 }
 
@@ -310,9 +310,9 @@ pub fn store_path<T: Serialize>(path: impl AsRef<Path>, cfg: T) -> Result<(), Co
 pub fn get_configuration_file_path<'a>(
     app_name: &str,
     config_name: impl Into<Option<&'a str>>,
-) -> Result<PathBuf, ConfyError> {
+) -> Result<PathBuf, ConpotError> {
     let config_name = config_name.into().unwrap_or("default-config");
-    let project = ProjectDirs::from("rs", "", app_name).ok_or(ConfyError::BadConfigDirectoryStr)?;
+    let project = ProjectDirs::from("rs", "", app_name).ok_or(ConpotError::BadConfigDirectoryStr)?;
 
     let config_dir_str = get_configuration_directory_str(&project)?;
 
@@ -323,12 +323,12 @@ pub fn get_configuration_file_path<'a>(
     Ok(path)
 }
 
-fn get_configuration_directory_str(project: &ProjectDirs) -> Result<&str, ConfyError> {
+fn get_configuration_directory_str(project: &ProjectDirs) -> Result<&str, ConpotError> {
     let config_dir_option = project.config_dir().to_str();
 
     match config_dir_option {
         Some(x) => Ok(x),
-        None => Err(ConfyError::BadConfigDirectoryStr),
+        None => Err(ConpotError::BadConfigDirectoryStr),
     }
 }
 
@@ -352,7 +352,7 @@ mod tests {
     /// Verify that if you call store_path() with an object that fails to serialize,
     /// the file on disk will not be overwritten or truncated.
     #[test]
-    fn test_store_path() -> Result<(), ConfyError> {
+    fn test_store_path() -> Result<(), ConpotError> {
         let tmp = tempfile::NamedTempFile::new().expect("Failed to create NamedTempFile");
         let path = tmp.path();
         let message = "Hello world!";
@@ -364,12 +364,12 @@ mod tests {
                 .create(true)
                 .truncate(true)
                 .open(path)
-                .map_err(ConfyError::OpenConfigurationFileError)?;
+                .map_err(ConpotError::OpenConfigurationFileError)?;
 
             f.write_all(message.as_bytes())
-                .map_err(ConfyError::WriteConfigurationFileError)?;
+                .map_err(ConpotError::WriteConfigurationFileError)?;
 
-            f.flush().map_err(ConfyError::WriteConfigurationFileError)?;
+            f.flush().map_err(ConpotError::WriteConfigurationFileError)?;
         }
 
         // Call store_path() to overwrite file with an object that fails to serialize.
@@ -381,13 +381,13 @@ mod tests {
             let mut f = OpenOptions::new()
                 .read(true)
                 .open(path)
-                .map_err(ConfyError::OpenConfigurationFileError)?;
+                .map_err(ConpotError::OpenConfigurationFileError)?;
 
             let mut buf = String::new();
 
             use std::io::Read;
             f.read_to_string(&mut buf)
-                .map_err(ConfyError::ReadConfigurationFileError)?;
+                .map_err(ConpotError::ReadConfigurationFileError)?;
             buf
         };
 

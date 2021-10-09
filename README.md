@@ -1,6 +1,6 @@
-# confy
+**NOTE**: This crate is a fork the [`confy`](https://github.com/rust-cli/confy) crate.
 
-Chat with us: [Discord](https://discord.gg/dwq4Zme)
+# Conpot
 
 Zero-boilerplate configuration management.
 
@@ -16,7 +16,7 @@ struct MyConfig {
 }
 
 fn main() -> Result<(), ::std::io::Error> {
-    let cfg: MyConfig = confy::load("my-app-name", None)?;
+    let cfg: MyConfig = conpot::load("my-app-name", None)?;
     dbg!(cfg);
     Ok(())
 }
@@ -24,10 +24,10 @@ fn main() -> Result<(), ::std::io::Error> {
 
 ## Using yaml
 Enabling the `yaml_conf` feature while disabling the default `toml_conf`
-feature causes confy to use a YAML config file instead of TOML.
+feature causes conpot to use a YAML config file instead of TOML.
 
 ```
-[dependencies.confy]
+[dependencies.conpot]
 features = ["yaml_conf"]
 default-features = false
 ```
@@ -45,4 +45,3 @@ Before version 0.4.0, the configuration file was written in the current director
 
 [`directories`]: https://crates.io/crates/directories
 [`directories-next`]: https://crates.io/crates/directories-next
-

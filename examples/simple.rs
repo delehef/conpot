@@ -1,6 +1,6 @@
-//! The most simplest examples of how to use confy
+//! The most simplest examples of how to use conpot
 
-extern crate confy;
+extern crate conpot;
 
 #[macro_use]
 extern crate serde_derive;
@@ -8,15 +8,15 @@ extern crate serde_derive;
 use std::io::Read;
 
 #[derive(Debug, Serialize, Deserialize)]
-struct ConfyConfig {
+struct ConpotConfig {
     name: String,
     comfy: bool,
     foo: i64,
 }
 
-impl Default for ConfyConfig {
+impl Default for ConpotConfig {
     fn default() -> Self {
-        ConfyConfig {
+        ConpotConfig {
             name: "Unknown".to_string(),
             comfy: true,
             foo: 42,
@@ -24,9 +24,9 @@ impl Default for ConfyConfig {
     }
 }
 
-fn main() -> Result<(), confy::ConfyError> {
-    let cfg: ConfyConfig = confy::load("confy_simple_app", None)?;
-    let file = confy::get_configuration_file_path("confy_simple_app", None)?;
+fn main() -> Result<(), conpot::ConpotError> {
+    let cfg: ConpotConfig = conpot::load("conpot_simple_app", None)?;
+    let file = conpot::get_configuration_file_path("conpot_simple_app", None)?;
     println!("The configuration file path is: {:#?}", file);
     println!("The configuration is:");
     println!("{:#?}", cfg);
@@ -37,11 +37,11 @@ fn main() -> Result<(), confy::ConfyError> {
         .read_to_string(&mut content)
         .expect("Failed to read toml configuration file.");
     println!("{}", content);
-    let cfg = ConfyConfig {
+    let cfg = ConpotConfig {
         name: "Test".to_string(),
         ..cfg
     };
-    confy::store("confy_simple_app",None, &cfg)?;
+    conpot::store("conpot_simple_app",None, &cfg)?;
     println!("The updated toml file content is:");
     let mut content = String::new();
     std::fs::File::open(&file)
@@ -49,7 +49,7 @@ fn main() -> Result<(), confy::ConfyError> {
         .read_to_string(&mut content)
         .expect("Failed to read toml configuration file.");
     println!("{}", content);
-    let _cfg = ConfyConfig {
+    let _cfg = ConpotConfig {
         name: "Test".to_string(),
         ..cfg
     };
